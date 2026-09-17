@@ -61,10 +61,22 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/form"
-            className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors mb-4"
           >
             {todaysSubmission ? 'Update Today\'s Form' : 'Fill Today\'s Form'}
           </Link>
+          
+          <a
+            href="https://forms.cloud.microsoft/pages/responsepage.aspx?id=zgSD_XlQy0uaVDJA7XQF2dYmtDFRSDRNowCPEBsVXAhUOUhGOUVZSE1GSTZDUUEzMkJJQUtROVNKRy4u&origin=QRCode&route=shorturl"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+            Auto-Fill Microsoft Form
+          </a>
         </div>
 
         {/* Profile Card */}

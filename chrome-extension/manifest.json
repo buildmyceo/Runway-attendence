@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Runway Form Auto-Filler",
+  "version": "1.0",
+  "description": "Auto-fills the Runway Microsoft Form based on your saved local data.",
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:3000/*",
+        "https://runway-attendence.vercel.app/*"
+      ],
+      "js": ["sync.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://forms.cloud.microsoft/*",
+        "https://forms.office.com/*"
+      ],
+      "js": ["autofill.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
