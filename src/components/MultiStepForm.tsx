@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
 type ProfileData = {
@@ -21,10 +20,8 @@ type SpaceUsageData = {
 }
 
 export default function MultiStepForm({
-  userId,
   forceEditProfile,
 }: {
-  userId: string
   forceEditProfile: boolean
 }) {
   const router = useRouter()
@@ -105,45 +102,35 @@ export default function MultiStepForm({
   const submitForm = async () => {
     setIsSubmitting(true)
     setError(null)
-    const supabase = createClient()
     
-    const today = new Date().toISOString().split('T')[0]
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const submissionData = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+        submission_date: today,
+        ...spaceUsage,
+        status: 'Submitted'
+      }
 
-    // check if already submitted today to upsert
-    const { data: existing } = await supabase
-      .from('daily_submissions')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('submission_date', today)
-      .single()
+      // Load existing submissions
+      const savedSubmissions = localStorage.getItem('runway_submissions')
+      let submissions: any[] = savedSubmissions ? JSON.parse(savedSubmissions) : []
 
-    const submissionData = {
-      user_id: userId,
-      submission_date: today,
-      ...spaceUsage,
-      status: 'Submitted'
-    }
+      // Check if already submitted today to upsert
+      const existingIndex = submissions.findIndex((sub) => sub.submission_date === today)
+      
+      if (existingIndex >= 0) {
+        submissions[existingIndex] = { ...submissions[existingIndex], ...submissionData, id: submissions[existingIndex].id }
+      } else {
+        submissions.push(submissionData)
+      }
 
-    let err;
-    if (existing) {
-      const { error } = await supabase
-        .from('daily_submissions')
-        .update(submissionData)
-        .eq('id', existing.id)
-      err = error
-    } else {
-      const { error } = await supabase
-        .from('daily_submissions')
-        .insert(submissionData)
-      err = error
-    }
-
-    setIsSubmitting(false)
-    if (err) {
-      setError('Failed to submit form: ' + err.message)
-    } else {
+      localStorage.setItem('runway_submissions', JSON.stringify(submissions))
       router.push('/dashboard')
-      router.refresh()
+    } catch (err: any) {
+      setError('Failed to submit form: ' + err.message)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 

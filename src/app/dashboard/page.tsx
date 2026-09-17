@@ -1,45 +1,52 @@
-import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SavedProfileCard from '@/components/SavedProfileCard'
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
+type Submission = {
+  id: string
+  submission_date: string
+  purpose: string[]
+  seat_number: string
+  duration: string
+  team_members: string
+  status: string
+}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function DashboardPage() {
+  const [history, setHistory] = useState<Submission[]>([])
+  const [todaysSubmission, setTodaysSubmission] = useState<Submission | null>(null)
+  const [mounted, setMounted] = useState(false)
 
-  if (!user) {
-    redirect('/login')
-  }
+  useEffect(() => {
+    setMounted(true)
+    const saved = localStorage.getItem('runway_submissions')
+    if (saved) {
+      try {
+        const parsed: Submission[] = JSON.parse(saved)
+        // sort history desc
+        parsed.sort((a, b) => new Date(b.submission_date).getTime() - new Date(a.submission_date).getTime())
+        setHistory(parsed.slice(0, 5))
 
-  // Fetch today's submission
-  const today = new Date().toISOString().split('T')[0]
-  const { data: todaysSubmission } = await supabase
-    .from('daily_submissions')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('submission_date', today)
-    .single()
+        // find today's submission
+        const todayStr = new Date().toISOString().split('T')[0]
+        const todaySub = parsed.find(sub => sub.submission_date === todayStr)
+        if (todaySub) {
+          setTodaysSubmission(todaySub)
+        }
+      } catch (e) {
+        console.error('Failed to parse local submissions', e)
+      }
+    }
+  }, [])
 
-  // Fetch history
-  const { data: history } = await supabase
-    .from('daily_submissions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('submission_date', { ascending: false })
-    .limit(5)
+  if (!mounted) return <div className="min-h-screen bg-gray-50 flex justify-center py-20"><div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div></div>
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Runway Attendance</h1>
-        <form action="/auth/signout" method="post">
-          <button className="text-sm text-gray-500 hover:text-gray-900">
-            Sign out
-          </button>
-        </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -67,7 +74,7 @@ export default async function DashboardPage() {
       {/* History */}
       <div className="mt-10 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-xl font-semibold mb-6">Submission History</h2>
-        {history && history.length > 0 ? (
+        {history.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
